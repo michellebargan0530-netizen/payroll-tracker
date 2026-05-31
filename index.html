@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Payroll Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary-red: #ef4444; --primary-green: #22c55e; --primary-blue: #3b82f6; --primary-yellow: #facc15; }
+        body { font-family: sans-serif; background-color: #f3f4f6; padding-bottom: 80px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        input[type="number"] { background-color: #fefce8; border: 1px solid #facc15; border-radius: 4px; padding: 4px 8px; width: 100px; text-align: right; }
+        .nav-btn.active { color: #3b82f6; border-top: 2px solid #3b82f6; }
+    </style>
+</head>
+<body>
+
+    <header class="bg-blue-600 text-white p-4 sticky top-0 z-50 shadow-md">
+        <div class="flex justify-between items-center">
+            <h1 id="current-payroll-label" class="text-lg font-bold">Payroll</h1>
+            <div class="text-right">
+                <p class="text-[10px] opacity-80 uppercase font-bold">Income (₱)</p>
+                <p id="income-display" class="text-xl font-black">₱0.00</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="p-4 max-w-md mx-auto">
+        <!-- GUIDE TAB -->
+        <section id="guide" class="tab-content active">
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
+                <h2 class="text-xl font-bold mb-4">Welcome 👋</h2>
+                <ul class="space-y-4 text-gray-700 text-sm">
+                    <li>📅 <b>Automatic:</b> App detects if it's the 1st or 16th.</li>
+                    <li>✏️ <b>Editable:</b> Tap any <span class="bg-yellow-100 px-1 border border-yellow-400">yellow</span> box to change amounts.</li>
+                    <li>💰 <b>Savings:</b> "Remaining" balance is split by your % settings.</li>
+                    <li>🔴 <b>Debts:</b> Tracks simple and compound interest.</li>
+                </ul>
+                <button onclick="switchTab('payroll')" class="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg font-bold">Start Tracking</button>
+            </div>
+        </section>
+
+        <!-- PAYROLL TAB -->
+        <section id="payroll" class="tab-content">
+            <div class="flex justify-between mb-4 gap-2">
+                <button onclick="changePayroll(-1)" class="bg-white border flex-1 py-2 rounded-lg text-sm font-bold shadow-sm">← Prev</button>
+                <button onclick="changePayroll(1)" class="bg-white border flex-1 py-2 rounded-lg text-sm font-bold shadow-sm">Next →</button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm mb-4 overflow-hidden">
+                <div class="bg-red-50 px-4 py-2 border-b flex justify-between items-center">
+                    <h3 class="text-red-600 font-bold uppercase text-[10px]">Expenses</h3>
+                    <button onclick="addOneTimeExpense()" class="text-blue-600 text-[10px] font-bold">+ One-time</button>
+                </div>
+                <div id="expense-list" class="divide-y"></div>
+                <div class="p-4 bg-gray-50 flex justify-between font-bold">
+                    <span class="text-sm">Total Expenses</span>
+                    <span id="total-expenses" class="text-red-600">₱0.00</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm p-4 mb-4">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-gray-600 font-bold text-sm">Remaining Balance</span>
+                    <span id="remaining-balance" class="text-2xl font-black text-green-600">₱0.00</span>
+                </div>
+                <div id="split-display" class="space-y-3 pt-3 border-t"></div>
+            </div>
+        </section>
+
+        <!-- SAVINGS TAB -->
+        <section id="savings" class="tab-content">
+            <h2 class="text-xl font-black mb-4">Savings Goals</h2>
+            <div id="savings-running-totals" class="space-y-3"></div>
+        </section>
+
+        <!-- DEBTS TAB -->
+        <section id="debts" class="tab-content">
+            <h2 class="text-xl font-black mb-4">Debt Tracker</h2>
+            <div id="debt-list" class="space-y-3"></div>
+            <div class="mt-4 bg-yellow-100 p-4 rounded-xl text-xs text-yellow-800 border-l-4 border-yellow-500">
+                <b>Tip:</b> Offer Mama ni Kate ₱5,250 (Simple) instead of ₱6,034 (Compound).
+            </div>
+        </section>
+
+        <!-- MORE TAB -->
+        <section id="more" class="tab-content">
+            <div class="bg-white p-4 rounded-xl space-y-6 shadow-sm">
+                <div>
+                    <h4 class="text-[10px] uppercase font-bold text-gray-400 mb-2">Income & Rate</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm"><span>Income (CAD)</span><input type="number" id="cfg-income" onchange="updateSettings()"></div>
+                        <div class="flex justify-between text-sm"><span>Exchange Rate</span><input type="number" id="cfg-rate" step="0.01" onchange="updateSettings()"></div>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-[10px] uppercase font-bold text-gray-400 mb-2">Savings Split %</h4>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="text-[10px]">🆘 EF%</label><input type="number" id="cfg-ef" class="w-full" onchange="updateSettings()"></div>
+                        <div><label class="text-[10px]">🏦 Ipon%</label><input type="number" id="cfg-ipon" class="w-full" onchange="updateSettings()"></div>
+                        <div><label class="text-[10px]">✈️ Travel%</label><input type="number" id="cfg-travel" class="w-full" onchange="updateSettings()"></div>
+                        <div><label class="text-[10px]">💕 Personal%</label><input type="number" id="cfg-personal" class="w-full" onchange="updateSettings()"></div>
+                    </div>
+                </div>
+                <button onclick="resetData()" class="w-full py-2 text-red-500 text-xs border border-red-100 rounded">Reset All Data</button>
+            </div>
+        </section>
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center h-16 z-50">
+        <button onclick="switchTab('guide')" class="nav-btn flex flex-1 flex-col items-center py-2 text-gray-400 active"><i class="fas fa-book"></i><span class="text-[10px]">Guide</span></button>
+        <button onclick="switchTab('payroll')" class="nav-btn flex flex-1 flex-col items-center py-2 text-gray-400"><i class="fas fa-wallet"></i><span class="text-[10px]">Payroll</span></button>
+        <button onclick="switchTab('savings')" class="nav-btn flex flex-1 flex-col items-center py-2 text-gray-400"><i class="fas fa-piggy-bank"></i><span class="text-[10px]">Savings</span></button>
+        <button onclick="switchTab('debts')" class="nav-btn flex flex-1 flex-col items-center py-2 text-gray-400"><i class="fas fa-hand-holding-dollar"></i><span class="text-[10px]">Debts</span></button>
+        <button onclick="switchTab('more')" class="nav-btn flex flex-1 flex-col items-center py-2 text-gray-400"><i class="fas fa-gear"></i><span class="text-[10px]">More</span></button>
+    </nav>
+
+    <script>
+        let state = {
+            settings: { incomeCAD: 350, exchangeRate: 41.50, split: { ef: 25, ipon: 25, travel: 20, personal: 30 } },
+            currentPayrollDate: null,
+            payrolls: {},
+            savingsRunningTotals: { ef: 0, ipon: 0, travel: 0, personal: 0 },
+            debts: [
+                { id: 1, name: "Eduardo", balance: 3600, type: 'simple', paid: false },
+                { id: 2, name: "Mama ni Kate", balance: 3000, type: 'compound', rate: 0.15, months: 5, paid: false }
+            ]
+        };
+
+        const recurring = [
+            { name: "RBCom", amount: 3600, schedule: "both" },
+            { name: "Credit Card", amount: 3000, schedule: "16th" },
+            { name: "BPI Personal Loan", amount: 1998, schedule: "1st" },
+            { name: "Grocery", amount: 2000, schedule: "both" },
+            { name: "Coop", amount: 900, schedule: "both" },
+            { name: "Utilities", amount: 1000, schedule: "both" },
+            { name: "Washing Machine Loan", amount: 1100, schedule: "1st" },
+            { name: "Sofa Loan", amount: 650, schedule: "1st" },
+            { name: "Gasoline", amount: 750, schedule: "both" }
+        ];
+
+        function init() {
+            const saved = localStorage.getItem('payroll_v1');
+            if (saved) state = JSON.parse(saved);
+            if (!state.currentPayrollDate) state.currentPayrollDate = getPayrollDate(new Date());
+            render();
+        }
+
+        function getPayrollDate(date) {
+            const d = new Date(date);
+            d.setDate(d.getDate() >= 16 ? 16 : 1);
+            return d.toISOString().split('T')[0];
+        }
+
+        function changePayroll(dir) {
+            const d = new Date(state.currentPayrollDate);
+            if(dir === 1) {
+                if(d.getDate() === 1) d.setDate(16);
+                else { d.setMonth(d.getMonth()+1); d.setDate(1); }
+            } else {
+                if(d.getDate() === 16) d.setDate(1);
+                else { d.setMonth(d.getMonth()-1); d.setDate(16); }
+            }
+            state.currentPayrollDate = d.toISOString().split('T')[0];
+            render(); save();
+        }
+
+        function render() {
+            const dateStr = state.currentPayrollDate;
+            if(!state.payrolls[dateStr]) {
+                const is16th = new Date(dateStr).getDate() === 16;
+                let ex = recurring.filter(r => r.schedule === 'both' || (is16th ? r.schedule === '16th' : r.schedule === '1st')).map(r => ({...r}));
+                if(dateStr === '2024-05-16') {
+                    ex = ex.filter(e => e.name !== 'RBCom');
+                    ex.push({name: "Eduardo debt", amount: 3600, schedule: "one-time"});
+                }
+                state.payrolls[dateStr] = { expenses: ex };
+            }
+
+            const data = state.payrolls[dateStr];
+            const incomePHP = state.settings.incomeCAD * state.settings.exchangeRate;
+            
+            document.getElementById('current-payroll-label').innerText = new Date(dateStr).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+            document.getElementById('income-display').innerText = formatPHP(incomePHP);
+
+            const list = document.getElementById('expense-list');
+            list.innerHTML = '';
+            let totalEx = 0;
+            data.expenses.forEach((ex, idx) => {
+                totalEx += ex.amount;
+                list.innerHTML += `<div class="flex justify-between items-center p-3 text-sm">
+                    <div><b>${ex.name}</b><div class="text-[10px] text-gray-400 uppercase">${ex.schedule}</div></div>
+                    <div class="flex items-center gap-2">
+                        <input type="number" value="${ex.amount}" onchange="updateEx(${idx}, this.value)">
+                        <button onclick="delEx(${idx})" class="text-gray-300"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
+            });
+
+            const rem = incomePHP - totalEx;
+            document.getElementById('total-expenses').innerText = formatPHP(totalEx);
+            document.getElementById('remaining-balance').innerText = formatPHP(rem);
+
+            const splitUI = document.getElementById('split-display');
+            splitUI.innerHTML = '';
+            const labels = {ef:'🆘 Emergency Fund', ipon:'🏦 Ipon / Savings', travel:'✈️ Travel Fund', personal:'💕 Personal + GF'};
+            Object.keys(state.settings.split).forEach(k => {
+                const val = rem * (state.settings.split[k]/100);
+                splitUI.innerHTML += `<div class="flex justify-between text-xs text-gray-500">
+                    <span>${labels[k]} (${state.settings.split[k]}%)</span>
+                    <span class="font-bold text-gray-800">${formatPHP(val)}</span>
+                </div>`;
+            });
+
+            const savList = document.getElementById('savings-running-totals');
+            savList.innerHTML = '';
+            Object.keys(state.savingsRunningTotals).forEach(k => {
+                savList.innerHTML += `<div class="bg-white p-4 rounded-xl flex justify-between items-center shadow-sm">
+                    <span class="text-sm font-bold text-gray-600">${labels[k]}</span>
+                    <input type="number" value="${state.savingsRunningTotals[k]}" class="text-blue-600 font-bold" onchange="updateSav('${k}', this.value)">
+                </div>`;
+            });
+
+            const dList = document.getElementById('debt-list');
+            dList.innerHTML = '';
+            state.debts.forEach((d, i) => {
+                let bal = d.balance;
+                if(d.type==='compound' && !d.paid) bal = d.balance * Math.pow(1.15, 5);
+                dList.innerHTML += `<div class="p-4 rounded-xl border ${d.paid?'bg-gray-100':'bg-white shadow-sm border-red-50'} flex justify-between items-center">
+                    <div><b class="${d.paid?'line-through':''}">${d.name}</b><div class="text-[10px] text-gray-400">${d.type}</div></div>
+                    <div class="text-right">
+                        <div class="font-black ${d.paid?'text-gray-400':'text-red-500'}">${formatPHP(bal)}</div>
+                        <button onclick="toggleDebt(${i})" class="text-[10px] uppercase font-bold text-blue-500">${d.paid?'Undo':'Paid ✅'}</button>
+                    </div>
+                </div>`;
+            });
+
+            document.getElementById('cfg-income').value = state.settings.incomeCAD;
+            document.getElementById('cfg-rate').value = state.settings.exchangeRate;
+            document.getElementById('cfg-ef').value = state.settings.split.ef;
+            document.getElementById('cfg-ipon').value = state.settings.split.ipon;
+            document.getElementById('cfg-travel').value = state.settings.split.travel;
+            document.getElementById('cfg-personal').value = state.settings.split.personal;
+        }
+
+        function switchTab(id) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            const btns = document.querySelectorAll('.nav-btn');
+            const map = {guide:0, payroll:1, savings:2, debts:3, more:4};
+            btns[map[id]].classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        function updateEx(i,v) { state.payrolls[state.currentPayrollDate].expenses[i].amount = parseFloat(v)||0; render(); save(); }
+        function delEx(i) { if(confirm('Delete?')){ state.payrolls[state.currentPayrollDate].expenses.splice(i,1); render(); save(); } }
+        function addOneTimeExpense() { const n=prompt("Name:"); const a=parseFloat(prompt("Amount:")); if(n&&a){state.payrolls[state.currentPayrollDate].expenses.push({name:n,amount:a,schedule:'one-time'}); render(); save();}}
+        function updateSav(k,v) { state.savingsRunningTotals[k]=parseFloat(v)||0; render(); save(); }
+        function toggleDebt(i) { state.debts[i].paid = !state.debts[i].paid; render(); save(); }
+        function updateSettings() {
+            state.settings.incomeCAD = parseFloat(document.getElementById('cfg-income').value);
+            state.settings.exchangeRate = parseFloat(document.getElementById('cfg-rate').value);
+            state.settings.split.ef = parseFloat(document.getElementById('cfg-ef').value);
+            state.settings.split.ipon = parseFloat(document.getElementById('cfg-ipon').value);
+            state.settings.split.travel = parseFloat(document.getElementById('cfg-travel').value);
+            state.settings.split.personal = parseFloat(document.getElementById('cfg-personal').value);
+            render(); save();
+        }
+        function formatPHP(n) { return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(n); }
+        function save() { localStorage.setItem('payroll_v1', JSON.stringify(state)); }
+        function resetData() { if(confirm('Erase all?')) { localStorage.clear(); location.reload(); } }
+
+        init();
+    </script>
+</body>
+</html>
