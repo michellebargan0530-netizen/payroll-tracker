@@ -11,8 +11,11 @@
         body { font-family: sans-serif; background-color: #f3f4f6; padding-bottom: 80px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        input[type="number"] { background-color: #fefce8; border: 1px solid #facc15; border-radius: 4px; padding: 4px 8px; width: 100px; text-align: right; }
+        input[type="number"] { background-color: #fefce8; border: 1px solid #facc15; border-radius: 4px; padding: 4px 8px; width: 90px; text-align: right; }
         .nav-btn.active { color: #3b82f6; border-top: 2px solid #3b82f6; }
+        .paid-row { opacity: 0.5; text-decoration: line-through; }
+        /* Custom checkbox size for fat fingers */
+        input[type="checkbox"] { width: 22px; height: 22px; accent-color: #22c55e; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -34,34 +37,34 @@
                 <h2 class="text-xl font-bold mb-4">Welcome 👋</h2>
                 <ul class="space-y-4 text-gray-700 text-sm">
                     <li>📅 <b>Automatic:</b> App detects if it's the 1st or 16th.</li>
+                    <li>✅ <b>Paid Status:</b> Tap the checkbox when you pay an expense.</li>
                     <li>✏️ <b>Editable:</b> Tap any <span class="bg-yellow-100 px-1 border border-yellow-400">yellow</span> box to change amounts.</li>
                     <li>💰 <b>Savings:</b> "Remaining" balance is split by your % settings.</li>
-                    <li>🔴 <b>Debts:</b> Tracks simple and compound interest.</li>
                 </ul>
-                <button onclick="switchTab('payroll')" class="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg font-bold">Start Tracking</button>
+                <button onclick="switchTab('payroll')" class="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg font-bold shadow-lg">Start Tracking</button>
             </div>
         </section>
 
         <!-- PAYROLL TAB -->
         <section id="payroll" class="tab-content">
             <div class="flex justify-between mb-4 gap-2">
-                <button onclick="changePayroll(-1)" class="bg-white border flex-1 py-2 rounded-lg text-sm font-bold shadow-sm">← Prev</button>
-                <button onclick="changePayroll(1)" class="bg-white border flex-1 py-2 rounded-lg text-sm font-bold shadow-sm">Next →</button>
+                <button onclick="changePayroll(-1)" class="bg-white border flex-1 py-2 rounded-lg text-sm font-bold shadow-sm active:bg-gray-100">← Prev</button>
+                <button onclick="changePayroll(1)" class="bg-white border flex-1 py-2 rounded-lg text-sm font-bold shadow-sm active:bg-gray-100">Next →</button>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm mb-4 overflow-hidden">
+            <div class="bg-white rounded-xl shadow-sm mb-4 overflow-hidden border border-gray-200">
                 <div class="bg-red-50 px-4 py-2 border-b flex justify-between items-center">
-                    <h3 class="text-red-600 font-bold uppercase text-[10px]">Expenses</h3>
-                    <button onclick="addOneTimeExpense()" class="text-blue-600 text-[10px] font-bold">+ One-time</button>
+                    <h3 class="text-red-600 font-bold uppercase text-[10px] tracking-widest">Expenses</h3>
+                    <button onclick="addOneTimeExpense()" class="text-blue-600 text-[10px] font-bold bg-white px-2 py-1 rounded border border-blue-100 shadow-sm">+ One-time</button>
                 </div>
-                <div id="expense-list" class="divide-y"></div>
+                <div id="expense-list" class="divide-y divide-gray-100"></div>
                 <div class="p-4 bg-gray-50 flex justify-between font-bold">
-                    <span class="text-sm">Total Expenses</span>
+                    <span class="text-sm text-gray-600">Total Expenses</span>
                     <span id="total-expenses" class="text-red-600">₱0.00</span>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm p-4 mb-4">
+            <div class="bg-white rounded-xl shadow-sm p-4 mb-4 border border-gray-200">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-gray-600 font-bold text-sm">Remaining Balance</span>
                     <span id="remaining-balance" class="text-2xl font-black text-green-600">₱0.00</span>
@@ -87,34 +90,34 @@
 
         <!-- MORE TAB -->
         <section id="more" class="tab-content">
-            <div class="bg-white p-4 rounded-xl space-y-6 shadow-sm">
+            <div class="bg-white p-4 rounded-xl space-y-6 shadow-sm border border-gray-200">
                 <div>
                     <h4 class="text-[10px] uppercase font-bold text-gray-400 mb-2">Income & Rate</h4>
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-sm"><span>Income (CAD)</span><input type="number" id="cfg-income" onchange="updateSettings()"></div>
-                        <div class="flex justify-between text-sm"><span>Exchange Rate</span><input type="number" id="cfg-rate" step="0.01" onchange="updateSettings()"></div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center text-sm"><span>Income (CAD)</span><input type="number" id="cfg-income" onchange="updateSettings()"></div>
+                        <div class="flex justify-between items-center text-sm"><span>Exchange Rate</span><input type="number" id="cfg-rate" step="0.01" onchange="updateSettings()"></div>
                     </div>
                 </div>
                 <div>
                     <h4 class="text-[10px] uppercase font-bold text-gray-400 mb-2">Savings Split %</h4>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div><label class="text-[10px]">🆘 EF%</label><input type="number" id="cfg-ef" class="w-full" onchange="updateSettings()"></div>
-                        <div><label class="text-[10px]">🏦 Ipon%</label><input type="number" id="cfg-ipon" class="w-full" onchange="updateSettings()"></div>
-                        <div><label class="text-[10px]">✈️ Travel%</label><input type="number" id="cfg-travel" class="w-full" onchange="updateSettings()"></div>
-                        <div><label class="text-[10px]">💕 Personal%</label><input type="number" id="cfg-personal" class="w-full" onchange="updateSettings()"></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="text-[10px] block mb-1">🆘 EF%</label><input type="number" id="cfg-ef" class="w-full" onchange="updateSettings()"></div>
+                        <div><label class="text-[10px] block mb-1">🏦 Ipon%</label><input type="number" id="cfg-ipon" class="w-full" onchange="updateSettings()"></div>
+                        <div><label class="text-[10px] block mb-1">✈️ Travel%</label><input type="number" id="cfg-travel" class="w-full" onchange="updateSettings()"></div>
+                        <div><label class="text-[10px] block mb-1">💕 Personal%</label><input type="number" id="cfg-personal" class="w-full" onchange="updateSettings()"></div>
                     </div>
                 </div>
-                <button onclick="resetData()" class="w-full py-2 text-red-500 text-xs border border-red-100 rounded">Reset All Data</button>
+                <button onclick="resetData()" class="w-full py-3 text-red-500 font-bold text-xs border border-red-100 rounded-lg bg-red-50">Reset All App Data</button>
             </div>
         </section>
     </main>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center h-16 z-50">
-        <button onclick="switchTab('guide')" class="nav-btn flex flex-1 flex-col items-center py-2 text-gray-400 active"><i class="fas fa-book"></i><span class="text-[10px]">Guide</span></button>
-        <button onclick="switchTab('payroll')" class="nav-btn flex flex-1 flex-col items-center py-2 text-gray-400"><i class="fas fa-wallet"></i><span class="text-[10px]">Payroll</span></button>
-        <button onclick="switchTab('savings')" class="nav-btn flex flex-1 flex-col items-center py-2 text-gray-400"><i class="fas fa-piggy-bank"></i><span class="text-[10px]">Savings</span></button>
-        <button onclick="switchTab('debts')" class="nav-btn flex flex-1 flex-col items-center py-2 text-gray-400"><i class="fas fa-hand-holding-dollar"></i><span class="text-[10px]">Debts</span></button>
-        <button onclick="switchTab('more')" class="nav-btn flex flex-1 flex-col items-center py-2 text-gray-400"><i class="fas fa-gear"></i><span class="text-[10px]">More</span></button>
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center h-16 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+        <button onclick="switchTab('guide')" class="nav-btn flex flex-1 flex-col items-center py-2 text-gray-400 active"><i class="fas fa-book"></i><span class="text-[10px] mt-1">Guide</span></button>
+        <button onclick="switchTab('payroll')" class="nav-btn flex flex-1 flex-col items-center py-2 text-gray-400"><i class="fas fa-wallet"></i><span class="text-[10px] mt-1">Payroll</span></button>
+        <button onclick="switchTab('savings')" class="nav-btn flex flex-1 flex-col items-center py-2 text-gray-400"><i class="fas fa-piggy-bank"></i><span class="text-[10px] mt-1">Savings</span></button>
+        <button onclick="switchTab('debts')" class="nav-btn flex flex-1 flex-col items-center py-2 text-gray-400"><i class="fas fa-hand-holding-dollar"></i><span class="text-[10px] mt-1">Debts</span></button>
+        <button onclick="switchTab('more')" class="nav-btn flex flex-1 flex-col items-center py-2 text-gray-400"><i class="fas fa-gear"></i><span class="text-[10px] mt-1">More</span></button>
     </nav>
 
     <script>
@@ -171,10 +174,12 @@
             const dateStr = state.currentPayrollDate;
             if(!state.payrolls[dateStr]) {
                 const is16th = new Date(dateStr).getDate() === 16;
-                let ex = recurring.filter(r => r.schedule === 'both' || (is16th ? r.schedule === '16th' : r.schedule === '1st')).map(r => ({...r}));
+                let ex = recurring.filter(r => r.schedule === 'both' || (is16th ? r.schedule === '16th' : r.schedule === '1st'))
+                                  .map(r => ({...r, paid: false})); // Add paid status
+                
                 if(dateStr === '2024-05-16') {
                     ex = ex.filter(e => e.name !== 'RBCom');
-                    ex.push({name: "Eduardo debt", amount: 3600, schedule: "one-time"});
+                    ex.push({name: "Eduardo debt", amount: 3600, schedule: "one-time", paid: false});
                 }
                 state.payrolls[dateStr] = { expenses: ex };
             }
@@ -188,13 +193,20 @@
             const list = document.getElementById('expense-list');
             list.innerHTML = '';
             let totalEx = 0;
+            
             data.expenses.forEach((ex, idx) => {
                 totalEx += ex.amount;
-                list.innerHTML += `<div class="flex justify-between items-center p-3 text-sm">
-                    <div><b>${ex.name}</b><div class="text-[10px] text-gray-400 uppercase">${ex.schedule}</div></div>
+                const isPaid = ex.paid || false;
+                list.innerHTML += `
+                <div class="flex items-center gap-3 p-3 ${isPaid ? 'paid-row' : ''}">
+                    <input type="checkbox" ${isPaid ? 'checked' : ''} onchange="toggleExPaid(${idx})">
+                    <div class="flex-1">
+                        <div class="text-sm font-bold">${ex.name}</div>
+                        <div class="text-[9px] text-gray-400 uppercase tracking-tighter">${ex.schedule}</div>
+                    </div>
                     <div class="flex items-center gap-2">
                         <input type="number" value="${ex.amount}" onchange="updateEx(${idx}, this.value)">
-                        <button onclick="delEx(${idx})" class="text-gray-300"><i class="fas fa-trash"></i></button>
+                        <button onclick="delEx(${idx})" class="text-gray-300 px-1"><i class="fas fa-trash-can text-xs"></i></button>
                     </div>
                 </div>`;
             });
@@ -217,7 +229,7 @@
             const savList = document.getElementById('savings-running-totals');
             savList.innerHTML = '';
             Object.keys(state.savingsRunningTotals).forEach(k => {
-                savList.innerHTML += `<div class="bg-white p-4 rounded-xl flex justify-between items-center shadow-sm">
+                savList.innerHTML += `<div class="bg-white p-4 rounded-xl flex justify-between items-center shadow-sm border border-gray-100">
                     <span class="text-sm font-bold text-gray-600">${labels[k]}</span>
                     <input type="number" value="${state.savingsRunningTotals[k]}" class="text-blue-600 font-bold" onchange="updateSav('${k}', this.value)">
                 </div>`;
@@ -228,8 +240,8 @@
             state.debts.forEach((d, i) => {
                 let bal = d.balance;
                 if(d.type==='compound' && !d.paid) bal = d.balance * Math.pow(1.15, 5);
-                dList.innerHTML += `<div class="p-4 rounded-xl border ${d.paid?'bg-gray-100':'bg-white shadow-sm border-red-50'} flex justify-between items-center">
-                    <div><b class="${d.paid?'line-through':''}">${d.name}</b><div class="text-[10px] text-gray-400">${d.type}</div></div>
+                dList.innerHTML += `<div class="p-4 rounded-xl border ${d.paid?'bg-gray-100 border-gray-200':'bg-white shadow-sm border-red-50'} flex justify-between items-center">
+                    <div><b class="${d.paid?'line-through text-gray-400':''} text-sm">${d.name}</b><div class="text-[10px] text-gray-400">${d.type}</div></div>
                     <div class="text-right">
                         <div class="font-black ${d.paid?'text-gray-400':'text-red-500'}">${formatPHP(bal)}</div>
                         <button onclick="toggleDebt(${i})" class="text-[10px] uppercase font-bold text-blue-500">${d.paid?'Undo':'Paid ✅'}</button>
@@ -245,6 +257,11 @@
             document.getElementById('cfg-personal').value = state.settings.split.personal;
         }
 
+        function toggleExPaid(idx) {
+            state.payrolls[state.currentPayrollDate].expenses[idx].paid = !state.payrolls[state.currentPayrollDate].expenses[idx].paid;
+            render(); save();
+        }
+
         function switchTab(id) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -256,8 +273,8 @@
         }
 
         function updateEx(i,v) { state.payrolls[state.currentPayrollDate].expenses[i].amount = parseFloat(v)||0; render(); save(); }
-        function delEx(i) { if(confirm('Delete?')){ state.payrolls[state.currentPayrollDate].expenses.splice(i,1); render(); save(); } }
-        function addOneTimeExpense() { const n=prompt("Name:"); const a=parseFloat(prompt("Amount:")); if(n&&a){state.payrolls[state.currentPayrollDate].expenses.push({name:n,amount:a,schedule:'one-time'}); render(); save();}}
+        function delEx(i) { if(confirm('Delete this expense?')){ state.payrolls[state.currentPayrollDate].expenses.splice(i,1); render(); save(); } }
+        function addOneTimeExpense() { const n=prompt("Expense Name:"); const a=parseFloat(prompt("Amount (₱):")); if(n&&a){state.payrolls[state.currentPayrollDate].expenses.push({name:n,amount:a,schedule:'one-time',paid:false}); render(); save();}}
         function updateSav(k,v) { state.savingsRunningTotals[k]=parseFloat(v)||0; render(); save(); }
         function toggleDebt(i) { state.debts[i].paid = !state.debts[i].paid; render(); save(); }
         function updateSettings() {
@@ -271,7 +288,7 @@
         }
         function formatPHP(n) { return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(n); }
         function save() { localStorage.setItem('payroll_v1', JSON.stringify(state)); }
-        function resetData() { if(confirm('Erase all?')) { localStorage.clear(); location.reload(); } }
+        function resetData() { if(confirm('Erase all saved data? This cannot be undone.')) { localStorage.clear(); location.reload(); } }
 
         init();
     </script>
